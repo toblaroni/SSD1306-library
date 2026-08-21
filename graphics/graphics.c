@@ -246,19 +246,15 @@ static void swap_vertex(vertex_t *v0, vertex_t *v1) {
     return;
 }
 
-static bool points_equal(vertex_t a, vertex_t b) {
-    return a.x == b.x && a.y == b.y;
-}
+static void sort_tri_vertices_by_y(vertex_t *v0, vertex_t *v1,  vertex_t *v2) {
+    if (v0->y > v1->y)
+        swap_vertex(v0, v1);
 
-static void sort_tri_vertices_by_y(vertex_t v0, vertex_t v1,  vertex_t v2) {
-    if (v0.y > v1.y)
-        swap_vertex(&v0, &v1);
+    if (v1->y > v2->y)
+        swap_vertex(v1, v2);
 
-    if (v1.y > v2.y)
-        swap_vertex(&v1, &v2);
-
-    if (v0.y > v1.y)
-        swap_vertex(&v0, &v1);
+    if (v0->y > v1->y)
+        swap_vertex(v0, v1);
 
     return;
 }
@@ -288,7 +284,7 @@ static void fill_bottom_flat_triangle(graphics_t *const gfx, vertex_t v0, vertex
     // Draw Apex pixel
     graphics_draw_pixel(gfx, v0.x, v0.y, gfx->fill_colour);
     
-    for (int y = v0.y; y < v1.y; y++) {
+    for (int y = v0.y; y <= v1.y; y++) {
         while (error_left < 0) {
             x_left += x_step_left;
             error_left += two_dy;
@@ -300,8 +296,10 @@ static void fill_bottom_flat_triangle(graphics_t *const gfx, vertex_t v0, vertex
         }
 
         // We want X < X_right so shared pixels are only covered by one triangle
-        if (x_left != x_right) 
+        if (x_left < x_right) 
             draw_horizontal_line(gfx, x_left, y, x_right-1, gfx->fill_colour);
+        else if (x_left == x_right) 
+            graphics_draw_pixel(gfx, x_left, y, gfx->fill_colour);
 
         error_left -= two_dx_left;
         error_right -= two_dx_right;
@@ -344,8 +342,10 @@ static void fill_top_flat_triangle(graphics_t *const gfx, vertex_t v0, vertex_t 
         }
 
         // We want X < X_right so shared pixels are only covered by one triangle
-        if (x_left != x_right) 
+        if (x_left < x_right) 
             draw_horizontal_line(gfx, x_left, y, x_right-1, gfx->fill_colour);
+        else if (x_left == x_right) 
+            graphics_draw_pixel(gfx, x_left, y, gfx->fill_colour);
 
         error_left -= two_dx_left;
         error_right -= two_dx_right;
@@ -359,23 +359,29 @@ static void fill_top_flat_triangle(graphics_t *const gfx, vertex_t v0, vertex_t 
 
 // https://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
 // https://mcejp.github.io/2020/11/06/bresenham.html
-int graphics_draw_triangle(graphics_t *const gfx, int x0, int y0, int x1, int y1, int x2, int y2) {
+int graphics_draw_triangle(graphics_t *const gfx, int x0, int y0, int x1, int y1, int x2, int y2)
+{
     vertex_t v0 = {x0, y0};
     vertex_t v1 = {x1, y1};
     vertex_t v2 = {x2, y2};
-    sort_tri_vertices_by_y(v0, v1, v2);
+    sort_tri_vertices_by_y(&v0, &v1, &v2);
 
-    if (gfx->fill_on) {
-        if (points_equal(v1, v2))
-            fill_bottom_flat_triangle(gfx, v0, v1, v2); 
-        else if (points_equal(v0, v1))
+    if (gfx->fill_on)
+    {
+        if (v1.y == v2.y)
+        {
+            fill_bottom_flat_triangle(gfx, v0, v1, v2);
+        }
+        else if (v0.y == v1.y)
+        {
             fill_top_flat_triangle(gfx, v0, v1, v2);
-        else {
+        }
+        else
+        {
             // Split into two triangles
             vertex_t v3 = {
-                (int)(v0.x + ((float)(v1.y - v0.y) / (float)(v2.y - v0.y)) * (v2.x - v0.x)),    // Is there a non-float way?
-                v1.y
-            };
+                (int)(v0.x + ((float)(v1.y - v0.y) / (float)(v2.y - v0.y)) * (v2.x - v0.x)), // Is there a non-float way?
+                v1.y};
 
             fill_bottom_flat_triangle(gfx, v0, v1, v3);
             fill_top_flat_triangle(gfx, v1, v3, v2);
@@ -383,7 +389,8 @@ int graphics_draw_triangle(graphics_t *const gfx, int x0, int y0, int x1, int y1
     }
 
     // Draw triangle
-    if (gfx->stroke_on && gfx->stroke_colour != gfx->fill_colour) {   // This is actually handled by draw line...
+    if (gfx->stroke_on && (!gfx->fill_on || gfx->stroke_colour != gfx->fill_colour))
+    { 
         graphics_draw_line(gfx, x0, y0, x1, y1);
         graphics_draw_line(gfx, x1, y1, x2, y2);
         graphics_draw_line(gfx, x2, y2, x0, y0);

@@ -41,23 +41,37 @@ int main() {
     // SSD1306_update(&screen);
     // sleep_ms(750);
 
-    int y = screen.height / 2;
     int framecount = 0;
-    while(1) {
+    while (true)
+    {
         graphics_clear(&gfx);
+
+        // Generate three random vertices
+        int x0 = rand() % screen.width;
+        int y0 = rand() % screen.height;
+
+        int x1 = rand() % screen.width;
+        int y1 = rand() % screen.height;
+
+        int x2 = rand() % screen.width;
+        int y2 = rand() % screen.height;
+
 
         graphics_draw_triangle(
             &gfx,
-            screen.width/2, screen.height-10, 
-            10, y,
-            screen.width-10, y
+            x0, y0,
+            x1, y1,
+            x2, y2
         );
 
-        int offset = roundf(sin(framecount * 0.1f) * 20.f);
-        y = screen.height/2 + offset;
+        printf(
+            "v1: (%i, %i), v2: (%i, %i), v3: (%i, %i)\n",
+            x0, y0, x1, y1, x2, y2
+        );
 
         SSD1306_update(&screen);
-        framecount++;
+
+        sleep_ms(1000);
     }
 
     return 0;
