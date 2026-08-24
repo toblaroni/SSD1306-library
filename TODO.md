@@ -51,7 +51,7 @@
 - [x] Circle
 - [x] Filled circle
 - [x] Triangle
-- [ ] Filled triangle
+- [x] Filled triangle
 - [ ] Polygon
 - [ ] Ellipse
 

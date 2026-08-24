@@ -288,7 +288,7 @@ static void fill_bottom_flat_triangle(graphics_t *const gfx, vertex_t v0, vertex
     int x_left_step = (dx_left << 16) / dy;
     int x_right_step = (dx_right << 16) / dy;
 
-    for (int y = v0.y; y <= v1.y; y++) {
+    for (int y = v0.y; y < v1.y; y++) {
         int x0 = x_left >> 16;
         int x1 = x_right >> 16;
         draw_horizontal_line(
@@ -302,6 +302,15 @@ static void fill_bottom_flat_triangle(graphics_t *const gfx, vertex_t v0, vertex
         x_left += x_left_step;
         x_right += x_right_step;
     }
+
+    // draw final scanline
+    draw_horizontal_line(
+        gfx,
+        v1.x,
+        v1.y,
+        v2.x,
+        gfx->fill_colour
+    );
 
     return;
 }
@@ -325,7 +334,7 @@ static void fill_top_flat_triangle(graphics_t *const gfx, vertex_t v0, vertex_t 
     int x_left_step = (dx_left << 16) / dy;
     int x_right_step = (dx_right << 16) / dy;
 
-    for (int y = v0.y; y <= v2.y; y++) {
+    for (int y = v0.y; y < v2.y; y++) {
         int x0 = x_left >> 16;
         int x1 = x_right >> 16;
         draw_horizontal_line(
@@ -339,6 +348,14 @@ static void fill_top_flat_triangle(graphics_t *const gfx, vertex_t v0, vertex_t 
         x_left += x_left_step;
         x_right += x_right_step;
     }
+
+    // Draw the exact Apex
+    graphics_draw_pixel(
+        gfx,
+        v2.x,
+        v2.y,
+        gfx->fill_colour
+    );
     return;
 }
 
