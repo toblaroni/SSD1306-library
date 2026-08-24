@@ -65,7 +65,7 @@ int main() {
 
         SSD1306_update(&screen);
 
-        sleep_ms(1000);
+        sleep_ms(500);
     }
 
     return 0;

@@ -74,6 +74,15 @@ static void draw_horizontal_line(graphics_t *const gfx, int x0, int y, int x1, g
     if (y < 0 || y >= gfx->height)
         return;
 
+    if (x0 == x1) {
+        if (colour == GRAPHICS_COLOUR_BLACK) {
+            graphics_draw_pixel(gfx, x0, y, false);
+        } else {
+            graphics_draw_pixel(gfx, x0, y, true);
+        }
+        return;
+    }
+
     if (x0 > x1)
         swap_int(&x0, &x1);
     
@@ -263,46 +272,35 @@ static void fill_bottom_flat_triangle(graphics_t *const gfx, vertex_t v0, vertex
     if (v1.x >= v2.x)
         swap_vertex(&v1, &v2);
 
-    int dx_left = abs(v1.x - v0.x);
-    int dx_right = abs(v2.x - v0.x);
+    int dy = v1.y - v0.y;
+    if (dy == 0) {
+        return;
+    }
 
-    int dy = abs(v1.y - v0.y);
+    int dx_left = v1.x - v0.x;
+    int dx_right = v2.x - v0.x;
 
-    int error_right = dy - dx_right;
-    int error_left = dy - dx_left;
+    // Use fixed point arithmetic
+    int x_left = v0.x << 16;
+    int x_right = v0.x << 16;
 
-    int x_left = v0.x;
-    int x_right = v0.x;
+    // 1 division per edge
+    int x_left_step = (dx_left << 16) / dy;
+    int x_right_step = (dx_right << 16) / dy;
 
-    int x_step_left = v1.x > v0.x ? 1 : -1;
-    int x_step_right = v2.x > v0.x ? 1 : -1;
-
-    int two_dx_left = 2 * dx_left;
-    int two_dx_right = 2 * dx_right;
-    int two_dy = 2 * dy;
-    
-    // Draw Apex pixel
-    graphics_draw_pixel(gfx, v0.x, v0.y, gfx->fill_colour);
-    
     for (int y = v0.y; y <= v1.y; y++) {
-        while (error_left < 0) {
-            x_left += x_step_left;
-            error_left += two_dy;
-        }
+        int x0 = x_left >> 16;
+        int x1 = x_right >> 16;
+        draw_horizontal_line(
+            gfx, 
+            x0, 
+            y, 
+            x1,
+            gfx->fill_colour
+        );
 
-        while (error_right < 0) {
-            x_right += x_step_right;
-            error_right += two_dy;
-        }
-
-        // We want X < X_right so shared pixels are only covered by one triangle
-        if (x_left < x_right) 
-            draw_horizontal_line(gfx, x_left, y, x_right-1, gfx->fill_colour);
-        else if (x_left == x_right) 
-            graphics_draw_pixel(gfx, x_left, y, gfx->fill_colour);
-
-        error_left -= two_dx_left;
-        error_right -= two_dx_right;
+        x_left += x_left_step;
+        x_right += x_right_step;
     }
 
     return;
@@ -312,48 +310,35 @@ static void fill_top_flat_triangle(graphics_t *const gfx, vertex_t v0, vertex_t 
     if (v0.x >= v1.x)   // we want v0 on the left
         swap_vertex(&v0, &v1);
 
-    int dx_left = abs(v2.x - v0.x);
-    int dx_right = abs(v2.x - v1.x);
+    int dy = v2.y - v0.y;
 
-    int dy = abs(v2.y - v0.y);
-
-    int error_right = dy - dx_right;
-    int error_left = dy - dx_left;
-
-    int x_left = v0.x;
-    int x_right = v1.x;
-
-    int x_step_left = v2.x > v0.x ? 1 : -1;
-    int x_step_right = v2.x > v1.x ? 1 : -1;
-
-    int two_dx_left = 2 * dx_left;
-    int two_dx_right = 2 * dx_right;
-    int two_dy = 2 * dy;
-    
-    for (int y = v0.y; y < v2.y; y++) {
-        while (error_left < 0) {
-            x_left += x_step_left;
-            error_left += two_dy;
-        }
-
-        while (error_right < 0) {
-            x_right += x_step_right;
-            error_right += two_dy;
-        }
-
-        // We want X < X_right so shared pixels are only covered by one triangle
-        if (x_left < x_right) 
-            draw_horizontal_line(gfx, x_left, y, x_right-1, gfx->fill_colour);
-        else if (x_left == x_right) 
-            graphics_draw_pixel(gfx, x_left, y, gfx->fill_colour);
-
-        error_left -= two_dx_left;
-        error_right -= two_dx_right;
+    if (dy == 0) {
+        return;
     }
 
-    // Draw Apex Pixel
-    graphics_draw_pixel(gfx, v2.x, v2.y, gfx->fill_colour);
+    int dx_left = v2.x - v0.x;
+    int dx_right = v2.x - v1.x;
 
+    int x_left = v0.x << 16;
+    int x_right = v1.x << 16;
+
+    int x_left_step = (dx_left << 16) / dy;
+    int x_right_step = (dx_right << 16) / dy;
+
+    for (int y = v0.y; y <= v2.y; y++) {
+        int x0 = x_left >> 16;
+        int x1 = x_right >> 16;
+        draw_horizontal_line(
+            gfx, 
+            x0, 
+            y, 
+            x1,
+            gfx->fill_colour
+        );
+
+        x_left += x_left_step;
+        x_right += x_right_step;
+    }
     return;
 }
 
@@ -383,6 +368,7 @@ int graphics_draw_triangle(graphics_t *const gfx, int x0, int y0, int x1, int y1
                 (int)(v0.x + ((float)(v1.y - v0.y) / (float)(v2.y - v0.y)) * (v2.x - v0.x)), // Is there a non-float way?
                 v1.y};
 
+            // Note: The bottom line of bottom flat and top line of top flat is drawn twice
             fill_bottom_flat_triangle(gfx, v0, v1, v3);
             fill_top_flat_triangle(gfx, v1, v3, v2);
         }
