@@ -1,7 +1,7 @@
 /* Graphics library for OLED displays. Treats each pixel as a bit in a framebuffer ordered by rows */
 
-#ifndef GRAPHICS_H
-#define GRAPHICS_H
+#ifndef GRAPHICS_2D_H
+#define GRAPHICS_2D_H
 
 #include <stdint.h>
 #include <pico/stdlib.h>
@@ -36,5 +36,8 @@ void graphics_no_fill(graphics_t *const graphics);
 void graphics_fill(graphics_t *const graphics, graphics_colour_t);
 void graphics_no_stroke(graphics_t *const graphics);
 void graphics_stroke(graphics_t *const graphics, graphics_colour_t);
+
+// TODO Polygon
+// int graphics_draw_poly();
 
 #endif

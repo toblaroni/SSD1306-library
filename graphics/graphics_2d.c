@@ -2,7 +2,7 @@
  * Basic 2D Graphics functions.
  */
 
-#include "graphics.h"
+#include "graphics_2d.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

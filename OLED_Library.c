@@ -1,6 +1,6 @@
 #include <math.h>
 #include "driver/SSD1306_driver.h"
-#include "graphics/graphics.h"
+#include "graphics/graphics_2d.h"
 
 #define OLED_ADDR 0x3D
 #define GPIO_SDA 0
@@ -58,10 +58,6 @@ int main() {
             x2, y2
         );
 
-        printf(
-            "v1: (%i, %i), v2: (%i, %i), v3: (%i, %i)\n",
-            x0, y0, x1, y1, x2, y2
-        );
 
         SSD1306_update(&screen);
 
