@@ -1,7 +1,7 @@
 /* Graphics library for OLED displays. Treats each pixel as a bit in a framebuffer ordered by rows */
 
-#ifndef GRAPHICS_2D_H
-#define GRAPHICS_2D_H
+#ifndef GRAPHICS_H
+#define GRAPHICS_H
 
 #include <stdint.h>
 #include <pico/stdlib.h>

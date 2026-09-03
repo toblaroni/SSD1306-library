@@ -1,6 +1,7 @@
 #include <math.h>
 #include "driver/SSD1306_driver.h"
-#include "graphics/graphics_2d.h"
+#include "graphics/graphics.h"
+#include "font.h"
 
 #define OLED_ADDR 0x3D
 #define GPIO_SDA 0
@@ -16,52 +17,17 @@ int main() {
     graphics_t gfx;
 
     // Initialise the OLED
-    int res = SSD1306_init(&screen, i2c0, OLED_ADDR, GPIO_SDA, GPIO_SCL, 128, 64);
-
-    switch (res) {
-        case SSD1306_OK:
-            printf("Initialised successfully\n");
-            break;
-        case SSD1306_ERROR_BAD_ADDRESS:
-            printf("Initialisation failed. Bad address... :(\n");
-            break;
-        case SSD1306_ERROR_TIMEOUT:
-            printf("Initialisation failed. Timeout... :(\n");
-            break;
-    }
+    SSD1306_init(&screen, i2c0, OLED_ADDR, GPIO_SDA, GPIO_SCL, 128, 64);
 
     graphics_init(&gfx, screen.framebuff, screen.width, screen.height);
-
-    graphics_no_stroke(&gfx);
-    graphics_fill(&gfx, GRAPHICS_COLOUR_WHITE);
 
     int framecount = 0;
     while (true)
     {
         graphics_clear(&gfx);
-
-        // Generate three random vertices
-        int x0 = rand() % screen.width;
-        int y0 = rand() % screen.height;
-
-        int x1 = rand() % screen.width;
-        int y1 = rand() % screen.height;
-
-        int x2 = rand() % screen.width;
-        int y2 = rand() % screen.height;
-
-
-        graphics_draw_triangle(
-            &gfx,
-            x0, y0,
-            x1, y1,
-            x2, y2
-        );
-
-
+        graphics_draw_char(&gfx, 'A', screen.width/2, screen.height/2);
         SSD1306_update(&screen);
-
-        sleep_ms(1000);
+        framecount++;
     }
 
     return 0;

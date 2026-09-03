@@ -55,16 +55,42 @@ target_include_directories(driver PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/driver
 )
 
-add_library(graphics_2d
-    graphics/graphics_2d.c
+add_library(graphics
+    graphics/graphics.c
 )
 
-target_include_directories(graphics_2d PUBLIC
+target_include_directories(graphics PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/graphics
 )
 
-target_link_libraries(graphics_2d
+target_link_libraries(graphics
     pico_stdlib
+)
+
+add_library(determination
+    graphics/fonts/determination.c
+)
+
+target_include_directories(determination PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}/graphics/fonts
+)
+
+target_link_libraries(determination
+    pico_stdlib
+)
+
+add_library(font
+    graphics/font.c
+)
+
+target_include_directories(font PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}/graphics
+)
+
+target_link_libraries(font
+    pico_stdlib
+    graphics
+    determination
 )
 
 target_link_libraries(driver
@@ -74,7 +100,8 @@ target_link_libraries(driver
 
 target_link_libraries(OLED_Library
     driver
-    graphics_2d
+    graphics
+    font
 )
 
 # Add the standard include files to the build
