@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import re
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -14,7 +15,7 @@ LAST_CHAR = 126
 def rasterize_char(font, char):
     """Return a glyph as 6 bytes, one byte per vertical column."""
 
-    SCALE = 8
+    SCALE = 2
 
     large_width = CHAR_WIDTH * SCALE
     large_height = CHAR_HEIGHT * SCALE
@@ -39,7 +40,7 @@ def rasterize_char(font, char):
 
     image = image.resize(
         (CHAR_WIDTH, CHAR_HEIGHT),
-        Image.Resampling.LANCZOS
+        Image.Resampling.BOX
     )
 
     pixels = image.load()
@@ -89,7 +90,7 @@ def generate_font(ttf_path, output_base, font_size):
     # Generate .h
     # ---------------------------------------------------------
 
-    guard = output_base.stem.upper() + "_H"
+    guard = re.sub(r'\W', '_', output_base.stem.upper()) + "_H"
 
     with open(header_path, "w") as h:
 
